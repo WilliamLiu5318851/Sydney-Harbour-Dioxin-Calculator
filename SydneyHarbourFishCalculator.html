@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>悉尼海港鱼肉计算器 (Dioxin Tank)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f3f4f6;
+        }
+        .gauge-container {
+            position: relative;
+            height: 200px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+        .fish-card {
+            transition: all 0.2s;
+        }
+        .fish-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        /* GTI Red Accent */
+        .gti-red {
+            color: #cc0000;
+        }
+        .bg-gti-red {
+            background-color: #cc0000;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center py-6 px-4">
+
+    <!-- Header -->
+    <div class="max-w-md w-full bg-white rounded-xl shadow-lg overflow-hidden mb-6 border-t-4 border-red-600">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-2">
+                <h1 data-i18n="appTitle" class="text-2xl font-bold text-gray-800"><i class="fas fa-fish mr-2"></i>二恶英计算器</h1>
+                <div class="flex items-center gap-4">
+                    <button id="langToggleBtn" class="text-sm font-semibold text-gray-500 hover:text-gray-800">
+                        <span class="en-text hidden">ZH</span><span class="zh-text">EN</span>
+                    </button>
+                    <span class="text-xs font-mono text-gray-400">Ver 1.5</span>
+                </div>
+            </div>
+            <p class="text-gray-600 text-sm leading-relaxed">
+                <span data-i18n="appDescription">本工具旨在帮助您管理因食用悉尼港海鲜（海港大桥以东）而产生的二恶英摄入量。所有建议均基于 NSW Food Authority 官方指南。</span>
+                <a data-i18n="dataSourceLink" href="https://www.foodauthority.nsw.gov.au/consumer/special-care-foods/sydney-harbour-seafood" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline text-xs block mt-1">
+                    <i class="fas fa-link mr-1"></i>点击查看数据来源
+                </a>
+                <span data-i18n="westWarning" class="text-xs text-red-500 font-bold mt-2 block">警告：海港大桥以西捕获的任何鱼类和甲壳类动物均不应食用。</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- Main Gauge & Status -->
+    <div class="max-w-md w-full bg-white rounded-xl shadow-lg overflow-hidden mb-6 p-6">
+        <h2 data-i18n="tankTitle" class="text-lg font-semibold text-gray-700 mb-4 text-center">本月二恶英额度 (Tank Level)</h2>
+        
+        <div class="gauge-container">
+            <canvas id="gaugeChart"></canvas>
+            <div class="absolute bottom-0 text-center">
+                <div id="percentageDisplay" class="text-4xl font-bold text-gray-800">0%</div>
+                <div id="statusText" class="text-sm font-medium text-green-600">安全 (Safe)</div>
+            </div>
+        </div>
+
+        <div class="mt-6 bg-gray-50 rounded-lg p-4 border border-gray-200">
+            <div class="flex justify-between items-center mb-1">
+                <span data-i18n="remaining" class="text-sm text-gray-500">剩余额度</span>
+                <span id="remainingText" class="text-sm font-bold text-gray-800">100.0%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div id="progressBar" class="bg-green-600 h-2.5 rounded-full" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Input Section -->
+    <div class="max-w-md w-full bg-white rounded-xl shadow-lg overflow-hidden mb-6 p-6">
+        <h2 data-i18n="inputTitle" class="text-lg font-semibold text-gray-700 mb-4">今天吃了什么？</h2>
+        
+        <div class="space-y-4">
+            <div>
+                <label data-i18n="selectFish" class="block text-sm font-medium text-gray-700 mb-1">选择鱼类</label>
+                <select id="fishSelect" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none bg-white">
+                    <!-- Options will be dynamically populated by JavaScript -->
+                </select>
+            </div>
+
+            <div>
+                <label data-i18n="weightLabel" class="block text-sm font-medium text-gray-700 mb-1">食入重量 (克/g)</label>
+                <div class="relative">
+                    <input type="number" id="weightInput" placeholder="例如: 150" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none" inputmode="numeric">
+                    <span class="absolute right-4 top-3 text-gray-400">g</span>
+                </div>
+                <div class="flex gap-2 mt-2">
+                    <button data-i18n="serving1" onclick="setWeight(150)" class="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded">1份(150g)</button>
+                    <button data-i18n="serving2" onclick="setWeight(300)" class="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded">2份(300g)</button>
+                    <button onclick="setWeight(500)" class="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded">500g</button>
+                </div>
+            </div>
+
+            <button data-i18n="addEntry" onclick="addEntry()" class="w-full bg-gray-800 hover:bg-gray-900 text-white font-bold py-3 rounded-lg transition shadow-md flex items-center justify-center">
+                <i class="fas fa-plus-circle mr-2"></i> 添加到记录
+            </button>
+        </div>
+    </div>
+
+    <!-- Log Section -->
+    <div id="logSection" class="max-w-md w-full bg-white rounded-xl shadow-lg overflow-hidden mb-6 p-6 hidden">
+        <div class="flex justify-between items-center mb-2">
+            <h2 data-i18n="logTitle" class="text-lg font-semibold text-gray-700">已记录摄入</h2>
+            <button data-i18n="resetAll" onclick="clearLogs()" class="text-xs text-red-500 hover:text-red-700 underline font-semibold">全部重置</button>
+        </div>
+        <div class="flex items-center justify-end gap-2 mb-4 text-sm border-b pb-3">
+            <span data-i18n="sortBy" class="text-gray-500">排序:</span>
+            <button id="sortDateBtn" data-i18n="sortTime" onclick="sortLogs('date')" class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-medium focus:outline-none">时间</button>
+            <button id="sortPercentBtn" data-i18n="sortPercent" onclick="sortLogs('percent')" class="px-3 py-1 bg-gray-100 text-gray-800 rounded-full font-medium hover:bg-gray-200 focus:outline-none">百分比</button>
+        </div>
+        <ul id="logList" class="space-y-3">
+            <!-- Logs go here -->
+        </ul>
+    </div>
+
+    <!-- Forecast Section -->
+    <div class="max-w-md w-full bg-white rounded-xl shadow-lg overflow-hidden mb-6 p-6">
+        <h2 data-i18n="forecastTitle" class="text-lg font-semibold text-gray-700 mb-2">剩余额度还能吃多少？</h2>
+        <p data-i18n="forecastSubtitle" class="text-xs text-gray-500 mb-4">基于当前剩余百分比的换算结果</p>
+        <div class="flex items-center justify-end gap-2 mb-4 text-sm border-b pb-3">
+            <span data-i18n="sortBy" class="text-gray-500">排序:</span>
+            <button id="sortForecastRiskBtn" data-i18n="sortRisk" onclick="sortForecast('risk')" class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-medium focus:outline-none">风险</button>
+            <button id="sortForecastGramsBtn" data-i18n="sortGrams" onclick="sortForecast('grams')" class="px-3 py-1 bg-gray-100 text-gray-800 rounded-full font-medium hover:bg-gray-200 focus:outline-none">克数</button>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-3" id="forecastGrid">
+            <!-- Forecast items generated by JS -->
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-6 border w-full max-w-md shadow-lg rounded-xl bg-white">
+            <h3 data-i18n="editTitle" class="text-lg leading-6 font-medium text-gray-900 mb-4">编辑记录</h3>
+            <div class="space-y-4">
+                <div>
+                    <label data-i18n="fishLabel" for="editFishSelect" class="block text-sm font-medium text-gray-700 mb-1">鱼类</label>
+                    <select id="editFishSelect" class="w-full p-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none"></select>
+                </div>
+                <div>
+                    <label data-i18n="weightLabel" for="editWeightInput" class="block text-sm font-medium text-gray-700 mb-1">食入重量 (克/g)</label>
+                    <input type="number" id="editWeightInput" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none" inputmode="numeric">
+                </div>
+            </div>
+            <div class="items-center mt-6 flex justify-end gap-3">
+                <button id="cancelEditBtn" data-i18n="cancel" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">
+                    取消
+                </button>
+                <button id="saveEditBtn" data-i18n="save" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">
+                    保存更改
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="SydneyHarbourFishCalculator.js"></script>
+</body>
+</html>
