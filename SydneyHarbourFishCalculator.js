@@ -66,6 +66,7 @@ const translations = {
         edit: 'Edit',
         delete: 'Delete',
         confirmClear: 'Are you sure you want to clear all records and reset the tank?',
+        weightPlaceholder: 'e.g., 150',
         enterValidWeight: 'Please enter a valid weight',
         statusSafe: 'Safe',
         statusWarning: 'Warning',
@@ -109,6 +110,7 @@ const translations = {
         edit: '编辑',
         delete: '删除',
         confirmClear: '确定要清空所有记录并重置油箱吗？',
+        weightPlaceholder: '例如: 150',
         enterValidWeight: '请输入有效的重量',
         statusSafe: '安全 (Safe)',
         statusWarning: '警告 (Warning)',
@@ -520,6 +522,13 @@ function updateUIText() {
         const key = el.dataset.i18n;
         if (translations[currentLang][key]) {
             el.innerHTML = translations[currentLang][key];
+        }
+    });
+
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.dataset.i18nPlaceholder;
+        if (translations[currentLang][key]) {
+            el.placeholder = translations[currentLang][key];
         }
     });
     // Re-render dynamic parts
