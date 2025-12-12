@@ -40,7 +40,7 @@ A simple, intuitive web application designed to help you easily track and manage
 
 ---
 
-1.  **Access the Application**: Open the application directly in your browser via https://your-app-url-here.com.
+1.  **Access the Application**: Open the application directly in your browser via https://sydney-harbour-dioxin-calculator.pages.dev/.
 2.  **Add Records**: On the "Consumption Records" page, click the "Add" button and enter the type and quantity of seafood you consumed.
 3.  **View Dashboard**: Return to the homepage, and the dashboard will update your dioxin intake percentage in real-time.
 4.  **Get Recommendations**: On the "Smart Prediction" page, view recommended safe consumption limits for various seafood.
