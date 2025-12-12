@@ -32,7 +32,7 @@ A simple, intuitive web application designed to help you easily track and manage
 
 ## 🚀 快速开始 / 🚀 Quick Start
 
-1.  **访问应用**: 直接在浏览器中打开 应用链接。
+1.  **访问应用**: 直接在浏览器中打开 https://sydney-harbour-dioxin-calculator.pages.dev/ 应用链接。
 2.  **添加记录**: 在“摄入记录”页面，点击“添加”按钮，输入您食用的海鲜种类和数量。
 3.  **查看仪表盘**: 返回主页，仪表盘将实时更新您的二恶英摄入百分比。
 4.  **获取建议**: 在“智能预测”页面，查看不同海鲜的安全食用量建议。
